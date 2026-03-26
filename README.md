@@ -379,6 +379,61 @@ Executes an open-ended search and extraction via Google. Interactive prompts gui
 node tests/agentic/azure_autonomous_scraper.js
 ```
 
+**Autonomous Scraper with DuckDuckGo (Recommended):**
+Enhanced scraper with custom DuckDuckGo search tool and command-line argument support. No Browserbase API key needed—works with just Azure OpenAI credentials.
+
+*Interactive mode (prompts for input):*
+```bash
+node tests/autonomous_search_scraper/autonomous_scraper_duckduckgo.js
+```
+
+*Non-interactive mode (command-line arguments):*
+```bash
+# Scrape 60 books from booktoscrape.com
+node tests/autonomous_search_scraper/autonomous_scraper_duckduckgo.js \
+  --prompt "Scrape 60 books from booktoscrape.com with title, price, rating, and availability" \
+  --format 1 \
+  --steps 60
+
+# Short form
+node tests/autonomous_search_scraper/autonomous_scraper_duckduckgo.js \
+  -p "Find Python tutorials" \
+  -f 2 \
+  -s 30
+```
+
+**Command-Line Arguments:**
+- `-p, --prompt <text>` — Search task/prompt (required for non-interactive mode)
+- `-f, --format <number>` — Output format: 1=Search Results (default), 2=Articles with Summaries
+- `-s, --steps <number>` — Max steps for agent (default: 25)
+- `-h, --help` — Show help message
+
+**Features:**
+- ✅ Custom DuckDuckGo search tool (no API key needed)
+- ✅ Autonomous web navigation and data extraction
+- ✅ Multi-page scraping with automatic pagination
+- ✅ Accumulates all data from all pages
+- ✅ Auto-saves results to JSON with timestamp
+- ✅ Works with Azure OpenAI only
+
+**Example Use Cases:**
+```bash
+# Search and scrape Python tutorials
+node tests/autonomous_search_scraper/autonomous_scraper_duckduckgo.js \
+  -p "Find top 10 Python tutorials with links and descriptions" \
+  -f 2 -s 40
+
+# Scrape e-commerce products
+node tests/autonomous_search_scraper/autonomous_scraper_duckduckgo.js \
+  -p "Scrape 50 laptop products with price and specs from Amazon" \
+  -f 1 -s 50
+
+# Research news articles
+node tests/autonomous_search_scraper/autonomous_scraper_duckduckgo.js \
+  -p "Find latest AI news articles from tech news sites" \
+  -f 2 -s 35
+```
+
 **Targeted Pagination Agent:**
 Uses the Stagehand `agent()` subsystem to handle multi-page layout traversal. Agent internally manages pagination logic.
 ```bash

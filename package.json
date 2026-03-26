@@ -11,6 +11,7 @@
     "@browserbasehq/stagehand": "^3.0.0",
     "@lightpanda/browser": "^1.2.0",
     "dotenv": "^16.4.5",
+    "duckduckgo-search": "^1.0.7",
     "openai": "^6.33.0",
     "zod": "^3.23.8"
   }

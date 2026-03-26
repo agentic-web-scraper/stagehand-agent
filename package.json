@@ -1,0 +1,17 @@
+{
+  "name": "stagehand-agent",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Lightpanda + Stagehand + NVIDIA NIM integration",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@browserbasehq/stagehand": "^3.0.0",
+    "@lightpanda/browser": "^1.2.0",
+    "dotenv": "^16.4.5",
+    "openai": "^6.33.0",
+    "zod": "^3.23.8"
+  }
+}

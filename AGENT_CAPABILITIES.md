@@ -35,7 +35,6 @@ const result = await agent.execute({
 
 **Implemented in:**
 - `web_scraping/autonomous_scraper_lightpanda.js`
-- `web_scraping/autonomous_scraper_duckduckgo.js`
 - `main/fully_autonomous_agent.js` (NEW - uses SearXNG)
 - `tests/agentic/azure_agent_scraper.js`
 
@@ -94,30 +93,7 @@ const searxngSearchTool = tool({
 });
 ```
 
-#### B. DuckDuckGo Search Tool
-- Searches the web without API keys
-- Returns URLs, titles, and snippets
-- Enables autonomous site discovery
-
-```javascript
-const duckduckgoSearchTool = tool({
-  description: "Search the web using DuckDuckGo",
-  inputSchema: z.object({
-    query: z.string(),
-    maxResults: z.number().optional(),
-  }),
-  execute: async ({ query, maxResults = 10 }) => {
-    const results = await duckDuckGoSearch({ query, max_results: maxResults });
-    return { results: results.map(r => ({
-      title: r.title,
-      url: r.link,
-      snippet: r.snippet,
-    }))};
-  },
-});
-```
-
-#### C. Data Processing Tools
+#### B. Data Processing Tools
 - `filterData` - Filter scraped data by criteria
 - `sortData` - Sort results by field
 - `deduplicateData` - Remove duplicates
@@ -128,8 +104,7 @@ const duckduckgoSearchTool = tool({
 ```javascript
 const agent = stagehand.agent({
   tools: {
-    searxngSearch: searxngSearchTool,  // NEW - SearXNG
-    duckduckgoSearch: duckduckgoSearchTool,
+    searxngSearch: searxngSearchTool,
     filterData: filterDataTool,
     sortData: sortDataTool,
   },
@@ -138,7 +113,6 @@ const agent = stagehand.agent({
 
 **Implemented in:**
 - `web_scraping/autonomous_scraper_lightpanda.js`
-- `web_scraping/autonomous_scraper_duckduckgo.js`
 - `main/fully_autonomous_agent.js` (NEW - SearXNG)
 - `tests/agentic/azure_scraper_with_tools.js`
 
@@ -326,7 +300,7 @@ const result = await agent.execute({
 **Capability**: Agent can search the web, find relevant sites, and scrape data without knowing the URL beforehand.
 
 **How it works:**
-1. Agent calls DuckDuckGo search tool with keywords
+1. Agent calls SearXNG search tool with keywords
 2. Receives list of URLs
 3. Visits most relevant URLs
 4. Extracts data from each site
@@ -336,13 +310,12 @@ const result = await agent.execute({
 ```javascript
 const result = await agent.execute({
   instruction: "Search for Python tutorials and scrape the top 5 sites",
-  tools: { duckduckgoSearch: duckduckgoSearchTool },
+  tools: { searxngSearch: searxngSearchTool },
 });
 // Agent searches, finds sites, visits them, and extracts data
 ```
 
 **Implemented in:**
-- `web_scraping/autonomous_scraper_duckduckgo.js`
 - `web_scraping/autonomous_scraper_lightpanda.js`
 - `main/fully_autonomous_agent.js` (NEW - SearXNG)
 - `tests/agentic/azure_autonomous_scraper.js`
@@ -407,7 +380,7 @@ node main/fully_autonomous_agent.js \
   "maxSteps": 40,
   "completed": true,
   "browser": "Lightpanda (CDP)",
-  "searchTool": "DuckDuckGo (custom)",
+  "searchTool": "SearXNG (custom)",
   "model": "azure/gpt-4o-mini",
   "totalItemsExtracted": 10,
   "data": {
@@ -474,7 +447,6 @@ while (retries < maxRetries) {
 ### Libraries
 - `@browserbasehq/stagehand` - Main framework
 - `zod` - Schema validation
-- `duckduckgo-search` - Web search without API keys
 - `puppeteer-core` - Browser automation (for Lightpanda)
 - `dotenv` - Environment configuration
 - `readline` - Interactive prompts
@@ -509,7 +481,7 @@ while (retries < maxRetries) {
         ┌────────────┼────────────┐
         │            │            │
 ┌───────▼──────┐ ┌──▼──────┐ ┌──▼──────────┐
-│ DuckDuckGo   │ │ Browser │ │ Data        │
+│ SearXNG      │ │ Browser │ │ Data        │
 │ Search Tool  │ │ Actions │ │ Processing  │
 │              │ │         │ │ Tools       │
 │ • Search web │ │ • goto  │ │ • Filter    │
@@ -621,7 +593,7 @@ node web_scraping/autonomous_scraper_lightpanda_chunked.js \
 ### Example 4: Autonomous Web Search
 
 ```bash
-node web_scraping/autonomous_scraper_duckduckgo.js \
+node main/fully_autonomous_agent.js \
   --prompt "Search for Python tutorials and scrape the top 5" \
   --steps 40
 ```
@@ -701,7 +673,7 @@ node web_scraping/autonomous_scraper_duckduckgo.js \
 ### Main Scrapers
 - `web_scraping/autonomous_scraper_lightpanda.js` - Lightpanda with keepAlive
 - `web_scraping/autonomous_scraper_lightpanda_chunked.js` - Chunked scraping
-- `web_scraping/autonomous_scraper_duckduckgo.js` - Chromium with DuckDuckGo
+- `main/fully_autonomous_agent.js` - Fully autonomous with SearXNG
 - `web_scraping/autonomous_scraper_lightpanda_urls_only.js` - URLs-only variant
 
 ### Documentation
@@ -731,7 +703,7 @@ node web_scraping/autonomous_scraper_duckduckgo.js \
 **What We Built:**
 - ✅ Autonomous AI agent that scrapes websites without hardcoded selectors
 - ✅ Multi-page navigation and pagination handling
-- ✅ Custom tools (DuckDuckGo search, data processing)
+- ✅ Custom tools (SearXNG search, data processing)
 - ✅ Lightpanda browser integration (68% less memory, 51% faster)
 - ✅ Chunked scraping for stability
 - ✅ Interactive and CLI modes

@@ -57,7 +57,7 @@
 ---
 
 ### Phase 5: Enhanced Autonomous Scraper (Queries 10-12)
-- [x] Create DuckDuckGo custom search tool (no API key needed)
+- [x] Create SearXNG custom search tool (privacy-focused, no API key needed)
 - [x] Add command-line argument support (`--prompt`, `--format`, `--steps`)
 - [x] Implement interactive and non-interactive modes
 - [x] Improve data accumulation across multiple pages
@@ -66,7 +66,7 @@
 - [x] Move to production folder: `web_scraping/`
 
 **Files Created:**
-- `web_scraping/autonomous_scraper_duckduckgo.js`
+- `web_scraping/autonomous_scraper_searxng.js`
 
 ---
 
@@ -118,7 +118,7 @@
 - `docs/LIGHTPANDA_SETUP_GUIDE.md`
 - `docs/LIGHTPANDA_ARCHITECTURE_DEEP_DIVE.md`
 - `docs/LIGHTPANDA_STAGEHAND_LIMITATION.md` (Updated: It WORKS!)
-- `docs/DUCKDUCKGO_TOOL_COMPARISON.md`
+- `docs/SEARXNG_TOOL_COMPARISON.md`
 
 **Key Discovery:**
 - ✅ Stagehand agent CAN use Lightpanda via `cdpUrl` in `localBrowserLaunchOptions`
@@ -170,8 +170,7 @@
 - Interactive prompts
 - CLI arguments
 - Custom tools (5 tools)
-- DuckDuckGo search
-- SearXNG search (NEW)
+- SearXNG search (privacy-focused)
 - Lightpanda browser
 - Health checks
 - Auto-save JSON
@@ -196,8 +195,7 @@
 - ✅ Hybrid mode (documented, not implemented)
 
 ### Custom Tools
-- ✅ DuckDuckGo search (no API key)
-- ✅ SearXNG search (privacy-focused, local instance) (NEW)
+- ✅ SearXNG search (privacy-focused, local instance)
 - ✅ Data filtering
 - ✅ Data sorting
 - ✅ Deduplication
@@ -358,7 +356,7 @@
 - Azure OpenAI GPT-4o mini
 - Lightpanda (AI-native browser)
 - Zod (schema validation)
-- DuckDuckGo Search API
+- SearXNG (privacy-focused search)
 
 ---
 
@@ -376,7 +374,7 @@
 ### Design Decisions
 - **Azure OpenAI over NVIDIA NIM**: Better agent performance, native Stagehand support
 - **DOM mode over CUA**: Faster, more cost-effective for web scraping
-- **DuckDuckGo over Brave Search**: No API key required, simpler setup
+- **SearXNG over Brave Search**: Privacy-focused, no API key required, simpler setup
 - **Lightpanda over Chromium**: Lower memory, faster startup, AI-optimized
 
 ### Lessons Learned
@@ -406,8 +404,8 @@ node scripts/check_lightpanda.js
 # Start Lightpanda
 ./lightpanda serve --host 127.0.0.1 --port 9222
 
-# Run DuckDuckGo scraper
-node web_scraping/autonomous_scraper_duckduckgo.js
+# Run SearXNG scraper
+node main/fully_autonomous_agent.js --prompt "Find Python tutorials" --steps 30
 
 # Run Lightpanda scraper
 node web_scraping/autonomous_scraper_lightpanda.js

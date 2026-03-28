@@ -1,105 +1,335 @@
 'use strict';
 
-import { lightpanda } from '@lightpanda/browser';
-import { Stagehand, CustomOpenAIClient } from "@browserbasehq/stagehand";
+import { Stagehand, tool } from "@browserbasehq/stagehand";
 import { z } from "zod";
 import dotenv from 'dotenv';
-import OpenAI from 'openai';
+import fs from 'fs';
+import { searchUrls } from '../lib/searchUrls.js';
 
-// Load environment variables
 dotenv.config();
 
-// Set OPENAI_API_KEY for Stagehand's OpenAI provider to use NVIDIA NIM
-process.env.OPENAI_API_KEY = process.env.NVIDIA_API_KEY;
-
-const lpdopts = {
-  host: '127.0.0.1',
-  port: 9222
+// Rich console output
+const colors = {
+  reset: '\x1b[0m',
+  bright: '\x1b[1m',
+  cyan: '\x1b[36m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  red: '\x1b[31m',
+  blue: '\x1b[34m',
+  gray: '\x1b[90m',
 };
 
-// Create custom OpenAI client for NVIDIA NIM
-const openaiClient = new OpenAI({
-  apiKey: process.env.NVIDIA_API_KEY,
-  baseURL: process.env.NVIDIA_BASE_URL,
-});
+function log(message, color = 'reset') {
+  console.log(`${colors[color]}${message}${colors.reset}`);
+}
 
-const stagehandopts = {
-  // Enable LOCAL env to configure the CDP url manually in the launch options.
-  env: "LOCAL",
-  localBrowserLaunchOptions: {
-    cdpUrl: 'ws://' + lpdopts.host + ':' + lpdopts.port,
-  },
-  // Use custom OpenAI client with NVIDIA NIM
-  llmClient: new CustomOpenAIClient({
-    modelName: "meta/llama-3.1-8b-instruct",
-    client: openaiClient,
+// SearXNG Search Tool
+const searxngSearchTool = tool({
+  description: "Search the web using SearXNG to find relevant URLs. Returns a list of search results with titles, URLs, and snippets.",
+  inputSchema: z.object({
+    query: z.string().describe("The search query string"),
+    maxResults: z.number().optional().describe("Maximum number of search results to return"),
   }),
-  verbose: 0,  // Set to 0 for clean output, 1 for detailed logs, 2 for debug
-};
+  execute: async ({ query, maxResults }) => {
+    try {
+      const numResults = maxResults || 10;
+      log(`   🔍 Searching SearXNG for: "${query}"`, "blue");
+      
+      const result = await searchUrls(query, numResults);
 
-// Define schema for stories
-const StorySchema = z.object({
-  title: z.string().describe("Story title"),
-  url: z.string().describe("Story URL"),
-  points: z.number().describe("Story points/score"),
+      if (!result.success) {
+        log(`   ⚠️  Search error: ${result.error}`, "yellow");
+        return {
+          success: false,
+          error: result.error,
+          results: [],
+        };
+      }
+
+      log(`   ✅ Found ${result.count} results`, "green");
+      
+      return result;
+    } catch (error) {
+      log(`   ⚠️  Search error: ${error.message}`, "yellow");
+      return {
+        success: false,
+        error: error.message,
+        results: [],
+      };
+    }
+  },
 });
 
-const StoriesSchema = z.object({
-  stories: z.array(StorySchema).describe("List of stories"),
-});
+// Parse command-line arguments
+function parseArgs() {
+  const args = process.argv.slice(2);
+  const parsed = {
+    url: null,
+    prompt: null,
+    maxSteps: 50,
+  };
 
-(async () => {
-  console.log("🚀 Starting Lightpanda + Stagehand + NVIDIA NIM integration...");
-  console.log(`📡 Lightpanda CDP: ws://${lpdopts.host}:${lpdopts.port}`);
-  console.log(`🤖 NVIDIA NIM: ${process.env.NVIDIA_BASE_URL}`);
-  console.log(`🧠 Model: meta/llama-3.1-8b-instruct\n`);
-
-  // Note: We're connecting to an already running Lightpanda instance
-  // instead of starting a new one
-  let stagehand;
-
-  try {
-    // Connect Stagehand to the browser.
-    console.log("🔌 Connecting Stagehand to Lightpanda...");
-    stagehand = new Stagehand(stagehandopts);
-
-    await stagehand.init();
-    console.log("✅ Stagehand initialized\n");
-
-    // Important: Lightpanda requires an explicit page creation
-    const page = await stagehand.context.newPage();
-    console.log("✅ New page created\n");
-
-    // Navigate to Hacker News
-    console.log("🌐 Navigating to Hacker News...");
-    await page.goto('https://news.ycombinator.com', { waitUntil: "networkidle" });
-    console.log("✅ Page loaded\n");
-
-    // Use Stagehand to extract structured data
-    console.log(" OExtracting top 3 stories with AI...");
-    const stories = await stagehand.extract(
-      "Extract the first 50 story titles from the page",
-      z.object({
-        titles: z.array(z.string()).describe("List of story titles"),
-      })
-    );
-
-    console.log("\n📰 Extracted Stories:");
-    console.log("=".repeat(80));
-    stories.titles.forEach((title, i) => {
-      console.log(`${i + 1}. ${title}`);
-    });
-    console.log("\n" + "=".repeat(80));
-
-    await stagehand.close();
-    console.log("\n✅ Done!");
-
-  } catch (error) {
-    console.error("\n❌ Error:", error.message);
-    console.error(error);
-  } finally {
-    if (stagehand) {
-      await stagehand.close().catch(() => {});
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    
+    if (arg === '--url' || arg === '-u') {
+      parsed.url = args[i + 1];
+      i++;
+    } else if (arg === '--prompt' || arg === '-p') {
+      parsed.prompt = args[i + 1];
+      i++;
+    } else if (arg === '--steps' || arg === '-s') {
+      parsed.maxSteps = parseInt(args[i + 1]) || 50;
+      i++;
+    } else if (arg === '--help' || arg === '-h') {
+      showHelp();
+      process.exit(0);
     }
   }
-})();
+
+  return parsed;
+}
+
+function showHelp() {
+  console.log(`
+╔════════════════════════════════════════════════════════════════╗
+║   🤖 FULLY AUTONOMOUS AGENT: AI Makes All Decisions           ║
+║              With SearXNG Search Integration                  ║
+╚════════════════════════════════════════════════════════════════╝
+
+USAGE:
+  node fully_autonomous_agent.js [OPTIONS]
+
+OPTIONS:
+  -p, --prompt <text>       What you want to find/scrape (required)
+  -u, --url <url>           Specific URL to scrape (optional)
+  -s, --steps <number>      Max steps for agent (default: 50)
+  -h, --help                Show this help message
+
+FEATURES:
+  • Agent makes ALL decisions autonomously
+  • SearXNG search to find relevant URLs
+  • Navigates and extracts data automatically
+  • Works without knowing the URL beforehand
+  • Stops when task is complete
+
+REQUIREMENTS:
+  • SearXNG instance running (default: http://localhost:8888)
+  • Set SEARXNG_URL environment variable if using different instance
+
+EXAMPLES:
+  # Search and scrape (no URL needed)
+  node fully_autonomous_agent.js \\
+    --prompt "Find and scrape Python tutorial websites"
+
+  # Search for specific information
+  node fully_autonomous_agent.js \\
+    -p "Find the top 5 React documentation sites and extract their main topics"
+
+  # Direct URL scraping (traditional mode)
+  node fully_autonomous_agent.js \\
+    --url "http://books.toscrape.com" \\
+    --prompt "Scrape all books with titles and prices"
+
+  # Search with more steps
+  node fully_autonomous_agent.js \\
+    -p "Find JavaScript frameworks and compare their features" \\
+    -s 100
+  `);
+}
+
+// Generic schema for any data
+const GenericDataSchema = z.object({
+  items: z.array(z.record(z.string(), z.any())),
+});
+
+// Main fully autonomous agent
+async function fullyAutonomousAgent() {
+ 
+  const args = parseArgs();
+  
+  if (!args.prompt) {
+    log("\n❌ Error: Prompt is required", "red");
+    log("   Use: --prompt \"what to find/scrape\"", "yellow");
+    process.exit(1);
+  }
+  
+  log("\n" + "=".repeat(70), "cyan");
+  log("🚀 STARTING FULLY AUTONOMOUS AGENT", "bright");
+  log("=".repeat(70), "cyan");
+  log(`📝 Task: ${args.prompt}`, "yellow");
+  log(`🌐 URL: ${args.url || 'Will search with SearXNG'}`, "yellow");
+  log(`⏱️  Max steps: ${args.maxSteps}`, "yellow");
+  log(`🤖 Mode: Fully Autonomous (Agent makes all decisions)`, "yellow");
+  log(`🔍 Search: SearXNG (if no URL provided)`, "yellow");
+  log(`🌐 Browser: Chromium (built-in)\n`, "yellow");
+
+  let stagehand;
+  
+  try {
+    // Initialize Stagehand
+    log("⏳ Initializing Stagehand...", "bright");
+    stagehand = new Stagehand({
+      env: "LOCAL",
+      model: "azure/gpt-4o-mini",
+      verbose: 1,  // Show agent's thinking
+      headless: false,
+      experimental: true,  // Required for agent output schema
+      disableAPI: true,    // Required for experimental features
+    });
+
+    await stagehand.init();
+    const page = stagehand.context.pages()[0];
+    log("✅ Stagehand initialized\n", "green");
+
+    // Navigate to URL if provided
+    if (args.url) {
+      log("⏳ Navigating to URL...", "yellow");
+      await page.goto(args.url, { waitUntil: 'networkidle' });
+      log("✅ Page loaded\n", "green");
+    } else {
+      log("ℹ️  No URL provided - agent will use SearXNG search\n", "blue");
+    }
+
+    // Create autonomous agent with search tool
+    log("🤖 Creating autonomous agent with SearXNG search...", "blue");
+    const agent = stagehand.agent({
+      model: "azure/gpt-4o-mini",
+      mode: "dom",  // DOM mode is faster and more cost-effective
+      tools: args.url ? undefined : {
+        searxngSearch: searxngSearchTool,
+      },
+      systemPrompt: args.url ? undefined : `You are an expert web researcher and data scraper with access to the searxngSearch tool.
+
+IMPORTANT: You have a searxngSearch TOOL available. DO NOT navigate to search engine websites manually.
+
+Your workflow when NO URL is provided:
+1. CALL TOOL: Use the searxngSearch tool with your search query (e.g., searxngSearch({query: "Python tutorials", maxResults: 10}))
+2. ANALYZE RESULTS: Review the URLs returned by the tool
+3. NAVIGATE: Use goto to visit the most relevant URLs from the search results
+4. EXTRACT: Extract the requested data from each page
+5. COMPLETE: Return all extracted data in the items array
+
+CRITICAL INSTRUCTIONS:
+- NEVER navigate to google.com, bing.com, searxng.org, or any search engine website
+- ALWAYS use the searxngSearch TOOL as your first action
+- The tool returns a list of {title, url, snippet} objects
+- Visit multiple URLs from the search results to gather complete information
+- Extract accurate and complete data from each page
+- Return structured data in the format: {items: [{...}, {...}]}`,
+    });
+    log("✅ Agent created\n", "green");
+
+    // Execute agent
+    // log("╔════════════════════════════════════════════════════════════════╗", "cyan");
+    // log("║ 🤖 AGENT EXECUTING AUTONOMOUSLY                                ║", "cyan");
+    // log("╚════════════════════════════════════════════════════════════════╝\n", "cyan");
+    
+    // log("💭 Agent is thinking and making decisions...", "blue");
+    // if (!args.url) {
+    //   log("   The agent will:", "gray");
+    //   log("   • Search DuckDuckGo for relevant URLs", "gray");
+    //   log("   • Visit the most relevant sites", "gray");
+    //   log("   • Extract the requested data", "gray");
+    //   log("   • Decide when to stop\n", "gray");
+    // } else {
+    //   log("   The agent will:", "gray");
+    //   log("   • Understand what data to extract", "gray");
+    //   log("   • Navigate through pages if needed", "gray");
+    //   log("   • Decide when to stop", "gray");
+    //   log("   • Extract all relevant data\n", "gray");
+    // }
+
+    const startTime = Date.now();
+    
+    const result = await agent.execute({
+      instruction: args.prompt,
+      output: GenericDataSchema,
+      maxSteps: args.maxSteps,
+    });
+    
+    const duration = Date.now() - startTime;
+
+    // Check results
+    log("\n╔════════════════════════════════════════════════════════════════╗", "cyan");
+    log("║ ✅ AGENT EXECUTION COMPLETE                                    ║", "cyan");
+    log("╚════════════════════════════════════════════════════════════════╝\n", "cyan");
+
+    // Extract items - handle nested structure
+    let items = [];
+    if (result.output?.items) {
+      items = result.output.items;
+    } else if (result.output?.books) {
+      items = result.output.books;
+    } else if (Array.isArray(result.output)) {
+      items = result.output;
+    }
+    
+    if (items.length === 0) {
+      log("⚠️  No items extracted", "yellow");
+      log("   The agent may need more steps or a clearer prompt", "gray");
+    } else {
+      log(`✅ Agent extracted ${items.length} items`, "green");
+      log(`⏱️  Total time: ${Math.round(duration / 1000)}s`, "gray");
+      log(`📊 Steps taken: ${result.steps || 'unknown'}`, "gray");
+    }
+
+    // Save results
+    const outputFile = `autonomous_agent_${Date.now()}.json`;
+    const outputData = {
+      timestamp: new Date().toISOString(),
+      url: args.url || "Search-based (SearXNG)",
+      prompt: args.prompt,
+      method: "Fully Autonomous Agent",
+      searchEnabled: !args.url,
+      searchTool: !args.url ? "SearXNG" : "N/A",
+      browser: "Chromium",
+      model: "azure/gpt-4o-mini",
+      maxSteps: args.maxSteps,
+      stepsTaken: result.steps || 'unknown',
+      completed: result.completed || false,
+      totalItems: items.length,
+      executionTime: `${Math.round(duration / 1000)}s`,
+      items: items,
+    };
+    
+    fs.writeFileSync(outputFile, JSON.stringify(outputData, null, 2));
+    
+    log(`\n💾 Results saved to: ${outputFile}`, "green");
+    
+    // Show sample
+    if (items.length > 0) {
+      log("\n📊 Sample of extracted items:", "bright");
+      items.slice(0, 5).forEach((item, i) => {
+        // Handle both object and string items
+        let preview;
+        if (typeof item === 'object' && item !== null) {
+          preview = Object.entries(item)
+            .map(([k, v]) => `${k}: ${String(v).substring(0, 50)}`)
+            .join(', ');
+        } else {
+          preview = String(item).substring(0, 100);
+        }
+        log(`  ${i + 1}. ${preview}`, "blue");
+      });
+      if (items.length > 5) {
+        log(`  ... and ${items.length - 5} more`, "gray");
+      }
+    }
+    
+    log("\n✅ Done!", "green");
+    log("💡 The agent made all decisions autonomously!", "yellow");
+
+  } catch (error) {
+    log(`\n❌ ERROR: ${error.message}`, "red");
+    console.error(error.stack);
+  } finally {
+    if (stagehand) {
+      await stagehand.close();
+    }
+  }
+}
+
+// Run agent
+fullyAutonomousAgent().catch(console.error);

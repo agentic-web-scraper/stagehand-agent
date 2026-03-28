@@ -128,30 +128,55 @@
 
 ---
 
+### Phase 9: SearXNG Integration & Fully Autonomous Agent (Queries 29-31)
+- [x] Replace DuckDuckGo with SearXNG search in lib/searchUrls.js
+- [x] Integrate SearXNG into fully_autonomous_agent.js
+- [x] Fix tool schema issue (use `inputSchema` instead of `parameters`)
+- [x] Test agent with searxngSearch tool
+- [x] Verify agent calls tool directly (no manual web navigation)
+- [x] Confirm multi-site scraping works
+- [x] Update documentation
+
+**Files Created/Updated:**
+- `main/fully_autonomous_agent.js` - Now uses SearXNG via lib/searchUrls.js
+- `.env` - Added SEARXNG_URL configuration
+
+**Key Discovery:**
+- ✅ Tool schema must use `inputSchema` not `parameters` (Stagehand v3 requirement)
+- ✅ Agent successfully calls searxngSearch tool autonomously
+- ✅ No manual web navigation needed - tool handles search
+- ✅ Multi-site scraping works correctly
+- ✅ Results saved with proper metadata
+
+---
+
 ## 📊 PROJECT STATISTICS
 
-### Files Created: 15+
-- **Scrapers**: 6 production-ready scripts
-- **Documentation**: 6 comprehensive guides
+### Files Created: 16+
+- **Scrapers**: 7 production-ready scripts
+- **Documentation**: 7 comprehensive guides
 - **Scripts**: 3 utility scripts
-- **Configuration**: 1 environment file
+- **Configuration**: 2 environment files
+- **Main agents**: 1 fully autonomous agent
 
-### Lines of Code: ~3,000+
-- JavaScript: ~2,500 lines
-- Documentation: ~1,500 lines
-- Configuration: ~50 lines
+### Lines of Code: ~3,500+
+- JavaScript: ~3,000 lines
+- Documentation: ~2,000 lines
+- Configuration: ~100 lines
 
-### Features Implemented: 20+
+### Features Implemented: 25+
 - Azure OpenAI integration
 - Multi-page pagination
 - Interactive prompts
 - CLI arguments
 - Custom tools (5 tools)
 - DuckDuckGo search
+- SearXNG search (NEW)
 - Lightpanda browser
 - Health checks
 - Auto-save JSON
 - Data accumulation
+- Fully autonomous agent (NEW)
 
 ---
 
@@ -172,7 +197,12 @@
 
 ### Custom Tools
 - ✅ DuckDuckGo search (no API key)
+- ✅ SearXNG search (privacy-focused, local instance) (NEW)
 - ✅ Data filtering
+- ✅ Data sorting
+- ✅ Deduplication
+- ✅ Field extraction
+- ✅ Statistics generation
 - ✅ Data sorting
 - ✅ Deduplication
 - ✅ Field extraction
@@ -188,7 +218,16 @@
 
 ## 🔄 IN PROGRESS
 
-*No tasks currently in progress*
+### Phase 9: SearXNG Integration & Fully Autonomous Agent (Query 29-31)
+- [x] Replace DuckDuckGo with SearXNG search in lib/searchUrls.js
+- [x] Integrate SearXNG into fully_autonomous_agent.js
+- [x] Fix tool schema issue (use `inputSchema` instead of `parameters`)
+- [x] Test agent with searxngSearch tool
+- [x] Verify agent calls tool directly (no manual web navigation)
+- [x] Confirm multi-site scraping works
+- [x] Update documentation
+
+**Status**: ✅ Complete - Agent now uses SearXNG via lib/searchUrls.js
 
 ---
 

@@ -46,6 +46,7 @@ lightpanda.log
 # Binary
 lightpanda
 
+selectors
 # OS
 .DS_Store
 Thumbs.db

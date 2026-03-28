@@ -293,7 +293,7 @@ AZURE_OPENAI_API_KEY=your_key_here
 AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com
 ```
 
-## How to Use This Project
+## Quick Start & Examples
 
 ### For Learning Stagehand Concepts
 
@@ -341,6 +341,33 @@ export async function scrapeProductData(url, productSchema) {
   }
 }
 ```
+
+### Fully Autonomous Agent (NEW)
+
+**No URL needed** — Agent searches the web and scrapes autonomously:
+
+```bash
+# Search and scrape (uses SearXNG)
+node main/fully_autonomous_agent.js \
+  --prompt "Find 3 Python tutorial websites" \
+  --steps 30
+
+# With custom task
+node main/fully_autonomous_agent.js \
+  -p "Find JavaScript frameworks and extract their features" \
+  -s 40
+```
+
+**Features:**
+- ✅ Autonomous web search via SearXNG
+- ✅ Multi-site scraping
+- ✅ Tool-based search (no manual navigation)
+- ✅ Structured data extraction
+- ✅ Auto-save to JSON
+
+**Requirements:**
+- SearXNG instance running (default: `http://localhost:8888`)
+- Set `SEARXNG_URL` in `.env` if using different instance
 
 ## Workflow Execution Flow
 

@@ -5,8 +5,7 @@ import { z } from "zod";
 import dotenv from 'dotenv';
 import readline from 'readline';
 import fs from 'fs';
-import pkg from 'duckduckgo-search';
-const { search: duckDuckGoSearch } = pkg;
+import { searchUrls } from '../../lib/searchUrls.js';
 
 dotenv.config();
 

@@ -1,0 +1,72 @@
+{
+  "name": "Hacker News Posts",
+  "baseSelector": "tr.athing",
+  "fields": [
+    {
+      "name": "title",
+      "selector": "td.title > span.titleline > a",
+      "type": "text",
+      "transform": "trim"
+    },
+    {
+      "name": "url",
+      "selector": "td.title > span.titleline > a",
+      "type": "attribute",
+      "attribute": "href"
+    },
+    {
+      "name": "points",
+      "selector": "tr + tr > td.subtext > span.score",
+      "type": "number",
+      "transform": "parseInt"
+    },
+    {
+      "name": "author",
+      "selector": "tr + tr > td.subtext > a.hnuser",
+      "type": "text",
+      "transform": "trim"
+    }
+  ],
+  "pagination": {
+    "type": "query",
+    "pattern": "?p={page}"
+  },
+  "confidence": 0.77,
+  "validation": {
+    "structureValid": true,
+    "errors": [],
+    "baseSelectorValid": true,
+    "itemsFound": 9,
+    "fieldResults": [
+      {
+        "name": "title",
+        "found": true,
+        "selector": "td.title > span.titleline > a"
+      },
+      {
+        "name": "url",
+        "found": true,
+        "selector": "td.title > span.titleline > a"
+      },
+      {
+        "name": "points",
+        "found": false,
+        "selector": "tr + tr > td.subtext > span.score"
+      },
+      {
+        "name": "author",
+        "found": false,
+        "selector": "tr + tr > td.subtext > a.hnuser"
+      }
+    ]
+  },
+  "metadata": {
+    "generatedAt": "2026-04-02T14:14:35.698Z",
+    "url": "https://news.ycombinator.com/",
+    "query": "Extract posts with title, url, points, and author",
+    "model": "gpt-4o-mini",
+    "htmlSize": 10000,
+    "processedSize": 8195,
+    "refinementAttempts": 0
+  }
+}

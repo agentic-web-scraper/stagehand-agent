@@ -4,7 +4,7 @@ import { Stagehand, tool } from "@browserbasehq/stagehand";
 import { z } from "zod";
 import dotenv from 'dotenv';
 import fs from 'fs';
-import { searchUrls } from '../lib/searchUrls.js';
+import { searchUrls } from './lib/searchUrls.js';
 
 dotenv.config();
 
@@ -170,9 +170,10 @@ async function fullyAutonomousAgent() {
   try {
     // Initialize Stagehand
     log("⏳ Initializing Stagehand...", "bright");
+    const model = process.env.STAGEHAND_MODEL || "azure/gpt-4o-mini";
     stagehand = new Stagehand({
       env: "LOCAL",
-      model: "azure/gpt-4o-mini",
+      model: model,
       verbose: 1,  // Show agent's thinking
       headless: false,
       experimental: true,  // Required for agent output schema
@@ -195,7 +196,7 @@ async function fullyAutonomousAgent() {
     // Create autonomous agent with search tool
     log("🤖 Creating autonomous agent with SearXNG search...", "blue");
     const agent = stagehand.agent({
-      model: "azure/gpt-4o-mini",
+      model: model,
       mode: "dom",  // DOM mode is faster and more cost-effective
       tools: args.url ? undefined : {
         searxngSearch: searxngSearchTool,
@@ -276,6 +277,7 @@ CRITICAL INSTRUCTIONS:
     }
 
     // Save results
+
     const outputFile = `autonomous_agent_${Date.now()}.json`;
     const outputData = {
       timestamp: new Date().toISOString(),
@@ -285,7 +287,7 @@ CRITICAL INSTRUCTIONS:
       searchEnabled: !args.url,
       searchTool: !args.url ? "SearXNG" : "N/A",
       browser: "Chromium",
-      model: "azure/gpt-4o-mini",
+      model: model,
       maxSteps: args.maxSteps,
       stepsTaken: result.steps || 'unknown',
       completed: result.completed || false,

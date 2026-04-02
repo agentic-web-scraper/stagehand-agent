@@ -12,6 +12,7 @@
     "@lightpanda/browser": "^1.2.0",
     "@phukon/duckduckgo-search": "^1.1.0",
     "dotenv": "^16.4.5",
+    "jsdom": "^24.0.0",
     "openai": "^6.33.0",
     "zod": "^3.23.8"
   }

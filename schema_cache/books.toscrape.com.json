@@ -1,0 +1,46 @@
+{
+  "name": "Book Listings",
+  "baseSelector": "article.product_pod",
+  "fields": [
+    {
+      "name": "title",
+      "selector": "h3 > a",
+      "type": "attribute",
+      "attribute": "title"
+    },
+    {
+      "name": "price",
+      "selector": ".product_price .price_color",
+      "type": "text",
+      "transform": "trim"
+    },
+    {
+      "name": "rating",
+      "selector": "p.star-rating",
+      "type": "attribute",
+      "attribute": "class",
+      "transform": "extract rating from class (e.g., 'star-rating Three' -> 'Three')"
+    }
+  ],
+  "pagination": {
+    "type": "query",
+    "pattern": "catalogue/page-{page}.html"
+  },
+  "confidence": 0.5,
+  "validation": {
+    "structureValid": true,
+    "errors": [],
+    "baseSelectorValid": false,
+    "itemsFound": 0,
+    "fieldResults": []
+  },
+  "metadata": {
+    "generatedAt": "2026-04-02T15:19:27.923Z",
+    "url": "https://books.toscrape.com/",
+    "query": "Extract books with title, price, rating",
+    "model": "gpt-4o-mini",
+    "htmlSize": 10000,
+    "processedSize": 3087,
+    "refinementAttempts": 1
+  }
+}

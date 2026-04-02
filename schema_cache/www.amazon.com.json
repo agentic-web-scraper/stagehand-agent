@@ -1,0 +1,68 @@
+{
+  "name": "Amazon Laptop Listings Improved",
+  "baseSelector": "div.s-main-slot div.s-asin",
+  "fields": [
+    {
+      "name": "model_name",
+      "selector": "h2 span.a-size-medium",
+      "type": "text"
+    },
+    {
+      "name": "price_whole",
+      "selector": "span.a-price-whole",
+      "type": "text"
+    },
+    {
+      "name": "price_fraction",
+      "selector": "span.a-price-fraction",
+      "type": "text"
+    },
+    {
+      "name": "configuration_details",
+      "selector": "div.a-row.a-size-base.a-color-secondary",
+      "type": "text"
+    }
+  ],
+  "pagination": {
+    "type": "query",
+    "pattern": "?page={page}"
+  },
+  "confidence": 0.9,
+  "validation": {
+    "structureValid": true,
+    "errors": [],
+    "baseSelectorValid": true,
+    "itemsFound": 22,
+    "fieldResults": [
+      {
+        "name": "model_name",
+        "found": false,
+        "selector": "h2 span.a-size-medium"
+      },
+      {
+        "name": "price_whole",
+        "found": true,
+        "selector": "span.a-price-whole"
+      },
+      {
+        "name": "price_fraction",
+        "found": true,
+        "selector": "span.a-price-fraction"
+      },
+      {
+        "name": "configuration_details",
+        "found": true,
+        "selector": "div.a-row.a-size-base.a-color-secondary"
+      }
+    ]
+  },
+  "metadata": {
+    "generatedAt": "2026-04-02T17:52:32.406Z",
+    "url": "https://www.amazon.com/s?k=laptops",
+    "query": "Extract laptop model name, price, and configuration details",
+    "model": "gpt-4o-mini",
+    "htmlSize": 1620067,
+    "processedSize": 8195,
+    "refinementAttempts": 1
+  }
+}

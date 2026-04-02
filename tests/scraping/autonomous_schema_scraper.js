@@ -123,7 +123,7 @@ function createSchemaGenerationTool(page) {
 }
 
 // Schema Extraction Tool Factory
-function createSchemaExtractionTool(page, allExtractedItems, incrementalFile, args) {
+function createSchemaExtractionTool(page) {
   return tool({
     description: "Extract data using a previously generated CSS schema. Very fast and cost-effective (no LLM calls). Use after generating schema with generateSchema tool.",
     inputSchema: z.object({
@@ -137,33 +137,12 @@ function createSchemaExtractionTool(page, allExtractedItems, incrementalFile, ar
         
         log(`   ✅ Extracted ${result.itemCount} items (confidence: ${(result.finalConfidence * 100).toFixed(1)}%)`, "green");
         
-        // Add items to collection
-        allExtractedItems.push(...result.items);
-        
-        // Save incrementally
-        const incrementalData = {
-          timestamp: new Date().toISOString(),
-          url: args.url || "Search-based (SearXNG)",
-          prompt: args.prompt,
-          method: "Fully Autonomous Agent with Intelligent Extraction (Incremental Save)",
-          totalItemsSoFar: allExtractedItems.length,
-          lastExtraction: {
-            itemCount: result.itemCount,
-            confidence: result.finalConfidence,
-            pageUrl: page.url()
-          },
-          items: allExtractedItems
-        };
-        
-        fs.writeFileSync(incrementalFile, JSON.stringify(incrementalData, null, 2));
-        log(`   💾 Saved ${allExtractedItems.length} items to incremental file`, "gray");
-        
         return {
           success: true,
           items: result.items,
           count: result.itemCount,
           confidence: result.finalConfidence,
-          message: `Successfully extracted ${result.itemCount} items. Total so far: ${allExtractedItems.length}. Confidence: ${(result.finalConfidence * 100).toFixed(1)}%`
+          message: `Successfully extracted ${result.itemCount} items. Confidence: ${(result.finalConfidence * 100).toFixed(1)}%`
         };
       } catch (error) {
         log(`   ❌ Extraction failed: ${error.message}`, "red");
@@ -379,11 +358,6 @@ async function fullyAutonomousAgent() {
 
   let stagehand;
   
-  // Create incremental save file
-  const timestamp = Date.now();
-  const incrementalFile = `results/autonomous_agent_${timestamp}_incremental.json`;
-  const allExtractedItems = [];
-  
   try {
     // Initialize Stagehand
     log("⏳ Initializing Stagehand...", "bright");
@@ -411,12 +385,11 @@ async function fullyAutonomousAgent() {
 
     // Create autonomous agent with intelligent extraction tools
     log("🤖 Creating autonomous agent with intelligent extraction...", "blue");
-    log(`💾 Incremental save file: ${incrementalFile}`, "gray");
     
     const tools = {
       analyzePage: createPageAnalysisTool(page),
       generateSchema: createSchemaGenerationTool(page),
-      extractWithSchema: createSchemaExtractionTool(page, allExtractedItems, incrementalFile, args),
+      extractWithSchema: createSchemaExtractionTool(page),
     };
     
     // Add search tool if no URL provided
@@ -459,8 +432,7 @@ CRITICAL RULES:
 - Return format: {items: [{title: "...", price: "...", rating: "..."}, ...]}
 - Each extractWithSchema call returns items - ADD them to your collection
 - Stop when you have enough items OR no more pages
-- If extractWithSchema returns ANY items, DO NOT call extract() - schema data is sufficient
-- NEVER use both extractWithSchema AND extract() on the same page
+- If extractWithSchema returns items (even with 50%+ confidence), DO NOT call extract() again
 - Only use LLM extract() if schema extraction returns 0 items
 - Schema extraction is sufficient for e-commerce sites
 
@@ -502,8 +474,6 @@ CRITICAL RULES:
 - ALWAYS use searxngSearch TOOL first
 - ALWAYS call analyzePage before extraction
 - Use schema extraction when recommended
-- If extractWithSchema returns ANY items, DO NOT use extract() - schema data is sufficient
-- NEVER use both extractWithSchema AND extract() on the same page
 - Return structured data: {items: [{...}, {...}]}`,
     });
     log("✅ Agent created with intelligent extraction tools\n", "green");
@@ -553,17 +523,9 @@ CRITICAL RULES:
       items = result.output;
     }
     
-    // Use incrementally saved items if agent output is empty
-    if (items.length === 0 && allExtractedItems.length > 0) {
-      log("⚠️  Agent output empty, but incremental save has data!", "yellow");
-      log(`   Using ${allExtractedItems.length} items from incremental save`, "yellow");
-      items = allExtractedItems;
-    }
-    
     if (items.length === 0) {
       log("⚠️  No items extracted", "yellow");
       log("   The agent may need more steps or a clearer prompt", "gray");
-      log(`   Check incremental file: ${incrementalFile}`, "gray");
     } else {
       log(`✅ Agent extracted ${items.length} items`, "green");
       log(`⏱️  Total time: ${Math.round(duration / 1000)}s`, "gray");
@@ -597,7 +559,6 @@ CRITICAL RULES:
     fs.writeFileSync(outputFile, JSON.stringify(outputData, null, 2));
     
     log(`\n💾 Results saved to: ${outputFile}`, "green");
-    log(`💾 Incremental saves: ${incrementalFile}`, "green");
     
     // Show sample
     if (items.length > 0) {
@@ -621,7 +582,6 @@ CRITICAL RULES:
     
     log("\n✅ Done!", "green");
     log("💡 The agent made all decisions autonomously!", "yellow");
-    log(`💡 Data saved incrementally - check ${incrementalFile} for all extracted items!`, "yellow");
 
   } catch (error) {
     log(`\n❌ ERROR: ${error.message}`, "red");
